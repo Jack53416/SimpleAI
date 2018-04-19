@@ -4,7 +4,11 @@
   "description": "Simple implementation of AI for a video game",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build:ts": "tsc",
+    "start": "node index.js",
+    "start:watch": "nodemon index.js",
+    "start:debug": "node --inspect index.js",
+    "start:debug:ts": "node --inspect --require ts-node/register src/main.ts"
   },
   "author": "Jacek Byczkiewicz",
   "license": "ISC",
@@ -13,10 +17,13 @@
     "grunt-contrib-watch": "^1.0.0",
     "grunt-eslint": "^20.1.0",
     "load-grunt-tasks": "^3.5.2",
+    "ts-node": "^6.0.0",
     "typescript-eslint-parser": "^15.0.0"
   },
   "dependencies": {
+    "@types/lodash": "^4.14.107",
     "grunt-ts": "^6.0.0-beta.19",
+    "lodash": "^4.17.5",
     "typescript": "^2.8.1"
   }
 }

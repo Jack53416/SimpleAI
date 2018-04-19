@@ -1,13 +1,16 @@
 {
     "compilerOptions": {
-        "module": "system",
+        "module": "commonjs",
         "noImplicitAny": true,
         "removeComments": true,
         "preserveConstEnums": true,
-        "outFile": "dist/app.js",
+        "rootDir": "src",
+        "outDir":"dist",
         "sourceMap": true,
 		"target": "es6",
-		"alwaysStrict": true
+		"alwaysStrict": true,
+		"emitDecoratorMetadata": true,
+		"experimentalDecorators": true
     },
     "include": [
         "src/**/*"
