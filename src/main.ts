@@ -1,4 +1,4 @@
-import * as _ from "lodash";
+import * as _ from 'lodash';
 
 enum TerrainType {
 	STANDARD = 1,
@@ -20,30 +20,30 @@ class Terrain {
 	sizeY: number;
 	map:number[][];
 	constructor(sizeX: number, sizeY:number){
-        this.sizeX = Math.floor(sizeX);
-        this.sizeY = Math.floor(sizeY);
-        this.map = [];
+	    this.sizeX = Math.floor(sizeX);
+	    this.sizeY = Math.floor(sizeY);
+	    this.map = [];
 	}
 
 	public getRandomTerrain(): TerrainType {
-		let terrainValues = Object.getOwnPropertyNames(TerrainType).filter((el) => !isNaN(Number(el)));
-		var en: { [index: string]: any } = TerrainType;
-		return en[_.sample(terrainValues)];
+	    let terrainValues = Object.getOwnPropertyNames(TerrainType).filter((el) => !isNaN(Number(el)));
+	    var en: { [index: string]: any } = TerrainType;
+	    return en[_.sample(terrainValues)];
 	}
 
 	public generateMap(): void {
-		this.map = new Array<Array<number>>(this.sizeY);
+	    this.map = new Array<Array<number>>(this.sizeY);
 
-		for(let i = 0; i < this.sizeY; i++){
-			this.map[i] = [...new Array<number>(this.sizeX)]
+	    for(let i = 0; i < this.sizeY; i++){
+	        this.map[i] = [...new Array<number>(this.sizeX)]
              				.map(() => Number(TerrainType[this.getRandomTerrain()]));
-		}
+	    }
 
-    }
+	}
 
-    public getTerrainCost(position: Location): number {
-        return this.map[position.y][position.x];
-    }
+	public getTerrainCost(position: Location): number {
+	    return this.map[position.y][position.x];
+	}
 }
 
 class Location {
@@ -85,7 +85,7 @@ class Location {
 
         return result;
     }
- }
+}
 
 class Player {
     name: string;
@@ -117,7 +117,7 @@ class Player {
             // expand
             let bestIdx = possibleMoves.indexOf(bestMove);
             if (bestIdx == -1) {
-                throw Error("Best idx not found ?");
+                throw Error('Best idx not found ?');
             }
 
             let expandMoves = bestMove.expand(world.sizeX, world.sizeY, this.moveHistory);
@@ -140,9 +140,9 @@ class Flag {
     }
 }
 
-let gameMap: Terrain = new Terrain(5, 5);
-let flag: Flag = new Flag(new Location(4, 4));
-let player: Player = new Player("player1", new Location(0, 0));
+let gameMap: Terrain = new Terrain(20, 20);
+let flag: Flag = new Flag(new Location(15, 15));
+let player: Player = new Player('player1', new Location(0, 0));
 gameMap.generateMap();
 console.log(gameMap.map);
 player.move(gameMap, flag);
