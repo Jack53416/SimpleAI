@@ -20,6 +20,7 @@ export default class Game{
     private pName: string = 'razor1911';
     private keyMap: Map<string, MoveDirections>;
     private manualPlay: boolean;
+    private debugMode: boolean;
 
     constructor(manualPlay?: boolean) {
         this.world = null;
@@ -44,42 +45,51 @@ export default class Game{
         let that = this;
         this.connection = new Connection(this.url,
             (e) => that.connection.sendPlayerInfo(that.pName),
-            (e) => {
-                console.log(`Connected \r\n${JSON.stringify(e)}`);
-                that.pId = e.playerId;
+            (connectResp) => {
+                console.log(`Connected \r\n${JSON.stringify(connectResp)}`);
+                that.pId = connectResp.playerId;
             },
-            (e) => {
+            (moveReq) => {
                 console.log(`Move request!`);
-                let playerDto = e.players.filter((el) => el.id == that.pId)[0];
-                e.players.splice(e.players.indexOf(playerDto), 1);
-                let enemyDto = e.players[0]; // TO DO: more enemies !
-
-                if (!that.world) {
-                    that.world = new GameMap(e.map.height, e.map.width);
+                try {
+                    this.makeMove(moveReq);
                 }
-
-                if (!that.player) {
-                    that.player = new Player(playerDto);
+                catch (err) {
+                    console.log(chalk.redBright(`Error occured: ${err}`));
                 }
-
-                if (!that.enemy && enemyDto) {
-                    that.enemy = new Player(enemyDto);
-                }
-
-                that.world.updateMap(e.map);
-                that.flagPosition.x = e.flag.x;
-                that.flagPosition.y = e.flag.y;
-                that.player.updateData(playerDto);
-                if (that.enemy && enemyDto)
-                    that.enemy.updateData(enemyDto);
-                if (that.manualPlay)
-                    that.displayDebugInfo();
-                else
-                    that.connection.sendMove(that.player.id, that.player.move(that.world, that.flagPosition));
             },
-            (e) => console.log('Game Over'),
-            (e) => console.log('Game Error')
+            (e) => console.log(`Game Over: ${e}`)
         );
+    }
+
+    private makeMove(moveReq: MoveRequest) {
+        let playerDto = moveReq.players.filter((el) => el.id == this.pId)[0];
+        moveReq.players.splice(moveReq.players.indexOf(playerDto), 1);
+        let enemyDto = moveReq.players.pop(); // TO DO: more enemies !
+
+        if (!this.world) {
+            this.world = new GameMap(moveReq.map.height, moveReq.map.width);
+        }
+
+        if (!this.player) {
+            this.player = new Player(playerDto);
+        }
+
+        if (!this.enemy && enemyDto) {
+            this.enemy = new Player(enemyDto);
+        }
+
+        this.world.updateMap(moveReq.map);
+        this.flagPosition.x = moveReq.flag.x;
+        this.flagPosition.y = moveReq.flag.y;
+        this.player.updateData(playerDto);
+        if (this.enemy && enemyDto)
+            this.enemy.updateData(enemyDto);
+        if (this.manualPlay)
+            this.displayDebugInfo();
+        else
+            this.connection.sendMove(this.player.id, this.player.move(this.world, this.flagPosition));
+
     }
 
     private displayDebugInfo() {
@@ -106,10 +116,15 @@ export default class Game{
                 process.exit();
             } else if (that.keyMap.has(str)) {
                 console.log("keyPressed");
-                if (that.keyMap.get(str) == MoveDirections.AUTOMATIC)
-                    that.connection.sendMove(that.player.id, that.player.move(that.world, that.flagPosition));
-                else
-                    that.connection.sendMove(that.player.id, that.keyMap.get(str));
+                try {
+                    if (that.keyMap.get(str) == MoveDirections.AUTOMATIC)
+                        that.connection.sendMove(that.player.id, that.player.move(that.world, that.flagPosition));
+                    else
+                        that.connection.sendMove(that.player.id, that.keyMap.get(str));
+                }
+                catch (err) {
+                    console.error(chalk.redBright("Invalid game session, uknown player location"));
+                }
             }
 
         });

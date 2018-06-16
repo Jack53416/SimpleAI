@@ -100,7 +100,11 @@ export default class Player {
             node = node.parent;
         }
         res = res.reverse();
-        console.log(res);
+        let bestMove = res[1];
+        let moveCost = this.hasFlag ? world.getTerrainCost(bestMove) + 1.5 : world.getTerrainCost(bestMove);
+        console.log(`next move: ${this.position.getDirection(bestMove)}\r\ncost:${moveCost}\r\npointsAvaliable:${this.movesLeft} `);
+        if (moveCost > this.movesLeft)
+            return MoveDirections.NO_MOVE;
         return this.position.getDirection(res[1]);
     }
 }

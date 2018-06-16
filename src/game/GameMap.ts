@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import { GameMapDto } from '../common/GameMapDto';
 import Location from './Location';
+import * as math from 'mathjs';
 
 export const enum TerrainType {
     UKNOWN = -1,
@@ -10,6 +11,7 @@ export const enum TerrainType {
 }
 
 export default class GameMap {
+    readonly uknownFieldCost: number;
     readonly width: number;
     readonly height: number;
     fields: number[][] = [];
@@ -17,7 +19,13 @@ export default class GameMap {
     constructor(heigth: number, width: number) {
         this.height = heigth;
         this.width = width;
+        this.uknownFieldCost = this.getTerraIncognitaValue();
         this.initMap();
+    }
+
+    private getTerraIncognitaValue(): number {
+        const terrains: number[] = [TerrainType.STANDARD, TerrainType.MARSH, TerrainType.WATER];
+        return math.mean(terrains) - math.std(terrains)/2;
     }
 
     private initMap() {
@@ -42,6 +50,8 @@ export default class GameMap {
     }
 
     public getTerrainCost(position: Location) {
+        if (this.fields[position.y][position.x] == TerrainType.UKNOWN)
+            return this.uknownFieldCost;
         return this.fields[position.y][position.x];
     }
 

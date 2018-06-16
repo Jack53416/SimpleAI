@@ -1,3 +1,7 @@
+src/.vs/
 node_modules/
 dist/
 .tscache/
+*.js
+*.js.map
+package-lock.json
