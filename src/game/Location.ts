@@ -34,9 +34,9 @@ export default class Location {
             new Location(this.x, this.y - 1, 0, this)
         ];
 
-        result = result.filter((el) => el.x >= 0 && el.y >= 0
-            && el.x < stopX && el.y < stopY
-            && !_.some(exclusionSet, { x: el.x, y: el.y }));
+        result = result.filter((el) => el.x >= 0 && el.y >= 0 //Check for proper coords
+            && el.x < stopX && el.y < stopY                   //Check for map boundaries
+            && !_.some(exclusionSet, { x: el.x, y: el.y }));  //Check if this location is new
 
         return result;
     }
@@ -52,5 +52,4 @@ export default class Location {
             return MoveDirections.UP;
         return MoveDirections.NO_MOVE;
     }
-
 }

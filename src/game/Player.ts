@@ -2,6 +2,7 @@ import { PlayerDto } from '../common/PlayerDto';
 import GameMap from './GameMap';
 import Location from './Location';
 import { MoveDirections } from './enums';
+import * as pathfinder from './Pathfinder';
 
 export default class Player {
     public readonly id: number;
@@ -59,52 +60,16 @@ export default class Player {
         };
     }
 
-    move(world: GameMap, targetPosition: Location) {
-        this.moveHistory = [];
-        this.position.cost = 0;
-        this.moveHistory.push(this.position);
-        if (this.hasFlag) {
-            targetPosition = this.basePosition;
-        }
-        let possibleMoves: Location[] = this.position.expand(world.width, world.height);
-        // assign cost
-        possibleMoves.map((el: Location) =>  el.cost += el.dist(targetPosition) + 0.97 * world.getTerrainCost(el));
+    move(world: GameMap, flagPositon: Location) {
+        let target = this.hasFlag ? this.basePosition : flagPositon;
+        let pathDescr = pathfinder.find(this.position, target, world);
 
-        while (true) {
-            // choose min cost location
-            let bestMove: Location = possibleMoves.reduce((prev, curr) => prev.cost < curr.cost ? prev : curr);
-            this.moveHistory.push(bestMove);
-            if (bestMove.equals(targetPosition))
-                break;
-            // expand
-            let bestIdx = possibleMoves.indexOf(bestMove);
-            if (bestIdx == -1) {
-                throw Error('Best idx not found ?');
-            }
+        if (this.hasFlag)
+            pathDescr.firstDirectionCost += 1.5;
+        console.log(`next move: ${pathDescr.firstDirection}\r\ncost:${pathDescr.firstDirectionCost}\r\npointsAvaliable:${this.movesLeft} `);
 
-            let expandMoves = bestMove.expand(world.width, world.height, this.moveHistory);
-
-            // assign cost
-            expandMoves.map((el) => el.cost += el.dist(targetPosition) + 0.97 * world.getTerrainCost(el));
-            // filter
-            possibleMoves.splice(bestIdx, 1);
-            // join
-            possibleMoves.push(...expandMoves);
-        }
-
-        let node = this.moveHistory.pop();
-        let res = [];
-
-        while (node) {
-            res.push(node);
-            node = node.parent;
-        }
-        res = res.reverse();
-        let bestMove = res[1];
-        let moveCost = this.hasFlag ? world.getTerrainCost(bestMove) + 1.5 : world.getTerrainCost(bestMove);
-        console.log(`next move: ${this.position.getDirection(bestMove)}\r\ncost:${moveCost}\r\npointsAvaliable:${this.movesLeft} `);
-        if (moveCost > this.movesLeft)
+        if (pathDescr.firstDirectionCost > this.movesLeft)
             return MoveDirections.NO_MOVE;
-        return this.position.getDirection(res[1]);
+        return pathDescr.firstDirection;
     }
 }
