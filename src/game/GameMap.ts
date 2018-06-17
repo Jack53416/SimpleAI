@@ -23,6 +23,10 @@ export default class GameMap {
         this.initMap();
     }
 
+    private clamp(num: number, min: number, max: number) {
+        return Math.min(Math.max(num, min), max);
+    }
+
     private getTerraIncognitaValue(): number {
         const terrains: number[] = [TerrainType.STANDARD, TerrainType.MARSH, TerrainType.WATER];
         return math.mean(terrains) - math.std(terrains)/2;
@@ -61,6 +65,26 @@ export default class GameMap {
             height: this.height,
             fields: this.fields
         };
+    }
+
+    public getFieldsInRadius(position: Location, radius: number) {
+        let startX: number = this.clamp(position.x - radius, 0, this.width);
+        let endX: number = this.clamp(position.x + radius, 0, this.width);
+        let startY: number = this.clamp(position.y - radius, 0, this.height);
+        let endY: number = this.clamp(position.y + radius, 0, this.height);
+
+        let result: Location[] = [];
+
+        for (let i = startY, heigth = endY - startY; i < heigth; i++) {
+            for (let j = startX, width = endX - startX; j < width; j++) {
+                let location = new Location(i, j);
+                location.cost = this.getTerrainCost(location);
+                result.push(location);
+            }
+        }
+
+        return result;
+
     }
 
     public printMap(): string[][] {
