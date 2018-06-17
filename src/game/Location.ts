@@ -26,6 +26,10 @@ export default class Location {
         return Math.sqrt((this.x - other.x) ** 2 + (this.y - other.y) ** 2);
     }
 
+    public manhattanDist(other: Location): number {
+        return Math.abs(this.x - other.x) + Math.abs(this.y - other.y);
+    }
+
     public expand(stopX?: number, stopY?: number, exclusionSet?: Location[]): Location[] {
         let result: Location[] = [
             new Location(this.x - 1, this.y, 0, this),

@@ -55,11 +55,21 @@ export default class Game{
                     this.makeMove(moveReq);
                 }
                 catch (err) {
-                    console.log(chalk.redBright(`Error occured: ${err}`));
+                    console.log(chalk.redBright(`Error occured: ${err}\r\n${err.stack}`));
                 }
             },
-            (e) => console.log(`Game Over: ${e}`)
+            (e) => {
+                console.log(`Game Over: ${JSON.stringify(e)}`);
+                this.clearCaschedData();
+            }
         );
+    }
+
+    private clearCaschedData() {
+        this.world = null;
+        this.player = null;
+        this.enemy = null;
+
     }
 
     private makeMove(moveReq: MoveRequest) {
@@ -85,10 +95,14 @@ export default class Game{
         this.player.updateData(playerDto);
         if (this.enemy && enemyDto)
             this.enemy.updateData(enemyDto);
+        if (this.enemy) {
+            if (this.player.position.equals(this.enemy.position))
+                this.enemy.isAlive = false;
+        }
         if (this.manualPlay)
             this.displayDebugInfo();
         else
-            this.connection.sendMove(this.player.id, this.player.move(this.world, this.flagPosition));
+            this.connection.sendMove(this.player.id, this.player.move(this.world, this.flagPosition, this.enemy));
 
     }
 
@@ -118,7 +132,7 @@ export default class Game{
                 console.log("keyPressed");
                 try {
                     if (that.keyMap.get(str) == MoveDirections.AUTOMATIC)
-                        that.connection.sendMove(that.player.id, that.player.move(that.world, that.flagPosition));
+                        that.connection.sendMove(that.player.id, that.player.move(that.world, that.flagPosition, this.enemy));
                     else
                         that.connection.sendMove(that.player.id, that.keyMap.get(str));
                 }

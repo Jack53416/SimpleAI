@@ -2,6 +2,7 @@ import { PlayerDto } from '../common/PlayerDto';
 import GameMap from './GameMap';
 import Location from './Location';
 import { MoveDirections } from './enums';
+import * as pathfinder from './Pathfinder';
 
 export default class Player {
     public readonly id: number;
@@ -59,52 +60,42 @@ export default class Player {
         };
     }
 
-    move(world: GameMap, targetPosition: Location) {
-        this.moveHistory = [];
-        this.position.cost = 0;
-        this.moveHistory.push(this.position);
-        if (this.hasFlag) {
-            targetPosition = this.basePosition;
-        }
-        let possibleMoves: Location[] = this.position.expand(world.width, world.height);
-        // assign cost
-        possibleMoves.map((el: Location) =>  el.cost += el.dist(targetPosition) + 0.97 * world.getTerrainCost(el));
+    private isOneTurnPath(path: pathfinder.Path): boolean {
+        if (this.hasFlag)
+            return path.moveCost + 1.5 * path.nodes.length <= this.movesLeft;
+        return path.moveCost <= this.movesLeft;
+    }
 
-        while (true) {
-            // choose min cost location
-            let bestMove: Location = possibleMoves.reduce((prev, curr) => prev.cost < curr.cost ? prev : curr);
-            this.moveHistory.push(bestMove);
-            if (bestMove.equals(targetPosition))
-                break;
-            // expand
-            let bestIdx = possibleMoves.indexOf(bestMove);
-            if (bestIdx == -1) {
-                throw Error('Best idx not found ?');
+    private isInView(target: Location): boolean {
+        return this.position.manhattanDist(target) <= this.viewRange;
+    }
+
+    private handleOtherPlayer(world: GameMap, enemy: Player): MoveDirections {
+        if (!enemy)
+            return MoveDirections.NO_MOVE;
+
+        if (this.isInView(enemy.position) && enemy.isAlive) {
+            let pathEnemy = pathfinder.findPath(world, this.position, enemy.position);
+            if (this.isOneTurnPath(pathEnemy)) {
+                return this.position.getDirection(pathEnemy.nodes[1]);
             }
-
-            let expandMoves = bestMove.expand(world.width, world.height, this.moveHistory);
-
-            // assign cost
-            expandMoves.map((el) => el.cost += el.dist(targetPosition) + 0.97 * world.getTerrainCost(el));
-            // filter
-            possibleMoves.splice(bestIdx, 1);
-            // join
-            possibleMoves.push(...expandMoves);
         }
+        return MoveDirections.NO_MOVE;
+    }
 
-        let node = this.moveHistory.pop();
-        let res = [];
-
-        while (node) {
-            res.push(node);
-            node = node.parent;
-        }
-        res = res.reverse();
-        let bestMove = res[1];
+    public move(world: GameMap, flagPosition: Location, enemy: Player): MoveDirections {
+        let targetPosition: Location = this.hasFlag ? this.basePosition : flagPosition;
+        let res: pathfinder.Path = pathfinder.findPath(world, this.position, targetPosition);
+        let bestMove = res.nodes[1];
         let moveCost = this.hasFlag ? world.getTerrainCost(bestMove) + 1.5 : world.getTerrainCost(bestMove);
-        console.log(`next move: ${this.position.getDirection(bestMove)}\r\ncost:${moveCost}\r\npointsAvaliable:${this.movesLeft} `);
+        //console.log(`next move: ${this.position.getDirection(bestMove)}\r\ncost:${moveCost}\r\npointsAvaliable:${this.movesLeft} `);
+
+        let moveToEnemy: MoveDirections = this.handleOtherPlayer(world, enemy);
+        if (moveToEnemy != MoveDirections.NO_MOVE)
+            return moveToEnemy;
+
         if (moveCost > this.movesLeft)
             return MoveDirections.NO_MOVE;
-        return this.position.getDirection(res[1]);
+        return this.position.getDirection(bestMove);
     }
 }
