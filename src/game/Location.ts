@@ -32,10 +32,10 @@ export default class Location {
 
     public expand(stopX?: number, stopY?: number, exclusionSet?: Location[]): Location[] {
         let result: Location[] = [
-            new Location(this.x - 1, this.y, 0, this),
-            new Location(this.x + 1, this.y, 0, this),
-            new Location(this.x, this.y + 1, 0, this),
-            new Location(this.x, this.y - 1, 0, this)
+            new Location(this.x - 1, this.y, this.cost, this),
+            new Location(this.x + 1, this.y, this.cost, this),
+            new Location(this.x, this.y + 1, this.cost, this),
+            new Location(this.x, this.y - 1, this.cost, this)
         ];
 
         result = result.filter((el) => el.x >= 0 && el.y >= 0
