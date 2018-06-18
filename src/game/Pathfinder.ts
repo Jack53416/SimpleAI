@@ -23,6 +23,7 @@ function recreatePath(targetNode: Location, world: GameMap): Path {
         node = node.parent;
     }
     path.nodes = path.nodes.reverse();
+    path.moveCost -= world.getTerrainCost(path.nodes[0]);
     return path;
 }
 
@@ -44,7 +45,7 @@ export function findPath(world: GameMap, startPositon: Location, targetPosition:
     moveHistory.push(startPositon);
     let possibleMoves: Location[] = startPositon.expand(world.width, world.height);
     // assign cost
-    possibleMoves.forEach((el: Location) => el.cost += el.dist(targetPosition) + 0.97 * world.getTerrainCost(el));
+    possibleMoves.forEach((el: Location) => el.cost += el.dist(targetPosition) +  0.7 * world.getTerrainCost(el));
 
     while (true) {
         // choose min cost location
