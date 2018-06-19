@@ -60,24 +60,38 @@ export default class Player {
         };
     }
 
-    private isOneTurnPath(path: pathfinder.Path): boolean {
+    public isReachable(path: pathfinder.Path, movePoints?: number): boolean {
+        let moveAvaliable = movePoints != undefined ? movePoints : this.movesLeft
         if (this.hasFlag)
-            return path.moveCost + 1.5 * path.nodes.length <= this.movesLeft;
-        return path.moveCost <= this.movesLeft;
+            return path.moveCost + 1.5 * (path.nodes.length - 1) <= moveAvaliable;
+        return path.moveCost <= moveAvaliable;
     }
 
-    private isInView(target: Location): boolean {
-        return this.position.manhattanDist(target) <= this.viewRange;
+    public isInView(target: Location): boolean {
+        return this.position.chebyshevDist(target) <= this.viewRange;
     }
 
-    private avoidEnemy(world: GameMap, target: Location, enemy: Player): pathfinder.Path {
+    public avoidEnemy(world: GameMap, target: Location, enemy: Player): pathfinder.Path {
         let losFields: Location[] = world.getFieldsInRadius(this.position, this.viewRange);
 
-        losFields = losFields.filter((el) => el.manhattanDist(enemy.position) >= 1); //remove fields adjacent to the enemy
-        // TO DO: rest of the code !
+        losFields = losFields.filter((el) => el.manhattanDist(enemy.position) > 1); //remove fields adjacent to the enemy
+        losFields = losFields.filter((el) =>  // remove all fields too close to the enemy or too far to reach
+            !enemy.isReachable(pathfinder.findPath(world, enemy.position, el), enemy.maxMovesPerRound) &&
+                this.isReachable(pathfinder.findPath(world, this.position, el))
+        );
 
+        // sort remaining fields based on the movement cost to the target
+        losFields.sort((locA, locB) => pathfinder.findPath(world, locA, target).moveCost - pathfinder.findPath(world, locB, target).moveCost);
 
-        return null;
+        console.log(`Avoiding enemy found fields:\r\n${JSON.stringify(losFields)}`);
+
+        if (losFields.length == 0) {
+            return {
+                nodes: [this.position],
+                moveCost: 0
+            };
+        }
+        return pathfinder.findPath(world, this.position, losFields[0]);
     }
 
     private calculatePath(world: GameMap, target: Location, enemy: Player): pathfinder.Path {
@@ -86,11 +100,11 @@ export default class Player {
 
         if (this.isInView(enemy.position) && enemy.isAlive) {
             let pathToEnemy = pathfinder.findPath(world, this.position, enemy.position);
-            if (this.isOneTurnPath(pathToEnemy)) {
+            if (this.isReachable(pathToEnemy)) {
                 return pathToEnemy;
             }
             /*else
-                return this.avoidEnemy(); TO DO */
+                return this.avoidEnemy(world, target, enemy);*/
         }
         return pathfinder.findPath(world, this.position, target);
 
@@ -100,7 +114,8 @@ export default class Player {
         let targetPosition: Location = this.hasFlag ? this.basePosition : flagPosition;
 
         let res: pathfinder.Path = this.calculatePath(world, targetPosition, enemy);
-        let bestMove = res.nodes[1];
+        let bestMove = pathfinder.getFirstMove(res);
+
         let moveCost = this.hasFlag ? world.getTerrainCost(bestMove) + 1.5 : world.getTerrainCost(bestMove);
 
         if (moveCost > this.movesLeft)

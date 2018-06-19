@@ -8,6 +8,7 @@ export interface Path {
 }
 
 
+
 export class InvalidPath extends Error { }
 export class InvalidLocation extends Error { }
 
@@ -27,18 +28,21 @@ function recreatePath(targetNode: Location, world: GameMap): Path {
     return path;
 }
 
-function getFirstMoveDirection(startPos: Location, path: Location[]): MoveDirections {
-    if (path.length < 2) {
-        throw new InvalidPath(`Generated path ${path} of length ${path.length} is invalid`);
-    }
 
-    let bestMove = path[1];
-    return startPos.getDirection(bestMove);
+export function getFirstMove(path: Path): Location {
+    if (path.nodes.length == 1) {
+        return path.nodes[0];
+    }
+    return path.nodes[1];
 }
 
 export function findPath(world: GameMap, startPositon: Location, targetPosition: Location): Path {
     if (startPositon.equals(targetPosition))
-        throw new InvalidLocation("Start position is the same as target position");
+        return {
+            nodes: [startPositon],
+            moveCost: 0
+        };
+
     let moveHistory = [];
     startPositon.cost = 0;
 
@@ -59,7 +63,7 @@ export function findPath(world: GameMap, startPositon: Location, targetPosition:
             throw Error('Best idx not found ?');
         }
 
-        let expandMoves = bestMove.expand(world.width, world.height, moveHistory);
+        let expandMoves = bestMove.expand(world.width, world.height, moveHistory.concat(possibleMoves));
 
         // assign cost
         expandMoves.forEach((el) => el.cost += el.dist(targetPosition) + 0.97 * world.getTerrainCost(el));
