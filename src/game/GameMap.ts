@@ -68,15 +68,15 @@ export default class GameMap {
     }
 
     public getFieldsInRadius(position: Location, radius: number) {
-        let startX: number = this.clamp(position.x - radius, 0, this.width);
-        let endX: number = this.clamp(position.x + radius, 0, this.width);
-        let startY: number = this.clamp(position.y - radius, 0, this.height);
-        let endY: number = this.clamp(position.y + radius, 0, this.height);
+        let startX: number = this.clamp(position.x - radius, 0, this.width - 1);
+        let endX: number = this.clamp(position.x + radius, 0, this.width - 1);
+        let startY: number = this.clamp(position.y - radius, 0, this.height - 1);
+        let endY: number = this.clamp(position.y + radius, 0, this.height - 1);
 
         let result: Location[] = [];
 
-        for (let i = startY, heigth = endY - startY; i <= heigth; i++) {
-            for (let j = startX, width = endX - startX; j <= width; j++) {
+        for (let i = startY; i <= endY; i++) {
+            for (let j = startX; j <= endX; j++) {
                 let location = new Location(j, i);
                 location.cost = this.getTerrainCost(location);
                 result.push(location);

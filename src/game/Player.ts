@@ -67,7 +67,7 @@ export default class Player {
 
     public isReachable(path: pathfinder.Path, movePoints: number = this.movesLeft): boolean {
         if (this.hasFlag)
-            return path.moveCost + 1.5 * (path.nodes.length - 1) <= movePoints;
+            return path.moveCost + 1.5 * path.nodes.length <= movePoints;
         return path.moveCost <= movePoints;
     }
 
@@ -87,7 +87,7 @@ export default class Player {
         console.log(`Avoiding enemy found fields:\r\n${JSON.stringify(losFields)}`);
 
         if (losFields.length == 0) {
-            resultPath = pathfinder.findPath(world, this.position, target, pathfinder.ComputationType.ACCURATE);
+            resultPath = pathfinder.findPath(world, this.position, target, pathfinder.ComputationType.GREEDY);
         }
         else {
             resultPath = pathfinder.findPath(world, this.position, losFields[0]);
@@ -106,7 +106,7 @@ export default class Player {
             else
                 return this.avoidEnemy(world, target, enemy);
         }
-        return pathfinder.findPath(world, this.position, target, pathfinder.ComputationType.ACCURATE);
+        return pathfinder.findPath(world, this.position, target, pathfinder.ComputationType.GREEDY);
 
     }
 

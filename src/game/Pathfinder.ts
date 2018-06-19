@@ -54,7 +54,7 @@ export function findPath(world: GameMap, startPositon: Location, targetPosition:
     moveHistory.push(startPositon);
     let possibleMoves: Location[] = startPositon.expand(world.width, world.height);
     // assign cost
-    possibleMoves.forEach((el: Location) => el.cost += el.chebyshevDist(targetPosition) + world.getTerrainCost(el));
+    possibleMoves.forEach((el: Location) => el.cost += 0.7 * el.dist(targetPosition) + world.getTerrainCost(el));
 
     while (true) {
         iterNum++;
@@ -74,9 +74,9 @@ export function findPath(world: GameMap, startPositon: Location, targetPosition:
 
         // assign cost
         if (mode == ComputationType.ACCURATE)
-            expandMoves.forEach((el) => el.cost += el.chebyshevDist(targetPosition) + world.getTerrainCost(el));
+            expandMoves.forEach((el) => el.cost += 0.7 * el.dist(targetPosition) + world.getTerrainCost(el));
         else
-            expandMoves.forEach((el) => el.cost = el.chebyshevDist(targetPosition) + world.getTerrainCost(el));
+            expandMoves.forEach((el) => el.cost = el.dist(targetPosition) + world.getTerrainCost(el));
         // filter
         possibleMoves.splice(bestIdx, 1);
         // join
