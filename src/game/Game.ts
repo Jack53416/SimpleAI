@@ -85,25 +85,28 @@ export default class Game{
             this.player = new Player(playerDto);
         }
 
-        if (!this.enemy && enemyDto) {
-            this.enemy = new Player(enemyDto);
+        if (!this.enemy) {
+            this.enemy = new Player(playerDto);
         }
 
         this.world.updateMap(moveReq.map);
         this.flagPosition.x = moveReq.flag.x;
         this.flagPosition.y = moveReq.flag.y;
         this.player.updateData(playerDto);
-        if (this.enemy && enemyDto)
+        if (enemyDto) {
             this.enemy.updateData(enemyDto);
-        if (this.enemy) {
+            this.enemy.isVisible = true;
             if (this.player.position.equals(this.enemy.position))
                 this.enemy.isAlive = false;
         }
+        else {
+            this.enemy.isVisible = false;
+        }
+
         if (this.manualPlay)
             this.displayDebugInfo();
         else
             this.connection.sendMove(this.player.id, this.player.move(this.world, this.flagPosition, this.enemy));
-
     }
 
     private displayDebugInfo() {
@@ -114,7 +117,7 @@ export default class Game{
         map[this.player.position.y][this.player.position.x] = `\x1b[36mP\x1b[0m`;
         map[this.flagPosition.y][this.flagPosition.x] = 'F';
         if (this.enemy && this.enemy.isAlive) {
-            if (this.enemy.isInView(this.player.position))
+            if (this.enemy.isVisible)
                 map[this.enemy.position.y][this.enemy.position.x] = chalk.redBright('E');
             else map[this.enemy.position.y][this.enemy.position.x] = chalk.red('~E~');
 
