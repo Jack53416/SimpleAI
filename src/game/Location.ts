@@ -1,6 +1,12 @@
 import * as _ from 'lodash';
 import { MoveDirections } from './enums';
 
+export const enum MetricType {
+    EUCLIDEAN,
+    MANHATTAN,
+    CHEBYSHEV
+};
+
 export default class Location {
     public x: number;
     public y: number;
@@ -28,6 +34,10 @@ export default class Location {
 
     public manhattanDist(other: Location): number {
         return Math.abs(this.x - other.x) + Math.abs(this.y - other.y);
+    }
+
+    public chebyshevDist(other: Location): number {
+        return Math.max(Math.abs(this.x - other.x), Math.abs(this.y - other.y));
     }
 
     public expand(stopX?: number, stopY?: number, exclusionSet?: Location[]): Location[] {

@@ -75,9 +75,9 @@ export default class GameMap {
 
         let result: Location[] = [];
 
-        for (let i = startY, heigth = endY - startY; i < heigth; i++) {
-            for (let j = startX, width = endX - startX; j < width; j++) {
-                let location = new Location(i, j);
+        for (let i = startY, heigth = endY - startY; i <= heigth; i++) {
+            for (let j = startX, width = endX - startX; j <= width; j++) {
+                let location = new Location(j, i);
                 location.cost = this.getTerrainCost(location);
                 result.push(location);
             }
