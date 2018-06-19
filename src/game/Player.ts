@@ -13,8 +13,11 @@ export default class Player {
     private readonly maxMovesPerRound: number;
     public readonly basePosition: Location;
     private readonly viewRange: number;
+    private readonly flagMovePenalty: number = 1.5;
 
     private movesLeft: number;
+    private lastFlagPosition: Location;
+
     public position: Location;
     public isVisible: boolean;
 
@@ -30,10 +33,8 @@ export default class Player {
         this.viewRange = playerDto.viewRange;
         this.movesLeft = playerDto.movesLeft;
         this.position = new Location(playerDto.x, playerDto.y);
-        this.cashedPath = {
-            nodes: [],
-            moveCost: 0
-        }
+        this.lastFlagPosition = new Location();
+        this.cashedPath = new pathfinder.Path();
         this.isVisible = true;
     }
 
@@ -67,7 +68,11 @@ export default class Player {
 
     public isReachable(path: pathfinder.Path, movePoints: number = this.movesLeft): boolean {
         if (this.hasFlag)
-            return path.moveCost + 1.5 * path.nodes.length <= movePoints;
+            return path.moveCost + this.flagMovePenalty * path.nodes.length <= movePoints;
+        let flagIdx = path.findLocationIdx(this.lastFlagPosition);
+        if (flagIdx != -1) {
+            path.moveCost += this.flagMovePenalty * flagIdx;
+        }
         return path.moveCost <= movePoints;
     }
 
@@ -78,11 +83,16 @@ export default class Player {
         losFields = losFields.filter((el) => el.manhattanDist(enemy.position) > 1); //remove fields adjacent to the enemy
         losFields = losFields.filter((el) =>  // remove all fields too close to the enemy or too far to reach
             !enemy.isReachable(pathfinder.findPath(world, enemy.position, el), enemy.maxMovesPerRound) &&
-                this.isReachable(pathfinder.findPath(world, this.position, el))
+            this.isReachable(pathfinder.findPath(world, this.position, el))
         );
 
         // sort remaining fields based on the movement cost to the target
-        losFields.sort((locA, locB) => pathfinder.findPath(world, locA, target).moveCost - pathfinder.findPath(world, locB, target).moveCost);
+        losFields.sort((locA, locB) => {
+            let mode = pathfinder.ComputationType.ACCURATE;
+            if (locA.manhattanDist(target) > 8 || locB.manhattanDist(target) > 8)
+                mode = pathfinder.ComputationType.GREEDY;
+            return pathfinder.findPath(world, locA, target, mode).moveCost - pathfinder.findPath(world, locB, target, mode).moveCost
+        });
 
         console.log(`Avoiding enemy found fields:\r\n${JSON.stringify(losFields)}`);
 
@@ -113,22 +123,24 @@ export default class Player {
     public move(world: GameMap, flagPosition: Location, enemy: Player): MoveDirections {
         let targetPosition: Location = this.hasFlag ? this.basePosition : flagPosition;
         let res: pathfinder.Path;
-        let bestMove;
+        let bestMove: Location;
+        this.lastFlagPosition = flagPosition; 
 
-        if (this.position.equals(this.basePosition)) {
-            this.cashedPath.nodes.length = 0;
-            this.cashedPath.moveCost = 0;
-        }
-        if (this.cashedPath.nodes.length == 0)
+        if (this.movesLeft == this.maxMovesPerRound || this.position.equals(this.basePosition) )
+            this.cashedPath.reset();
+
+        if (this.cashedPath.status == pathfinder.PathStatus.EMPTY)
             res = this.calculatePath(world, targetPosition, enemy);
+        else if (this.cashedPath.status == pathfinder.PathStatus.FINISHED)
+            return MoveDirections.NO_MOVE;
 
         if (res) {
-            bestMove = res.nodes.pop()
+            bestMove = res.getNextNode();
         }
         else
-            bestMove = this.cashedPath.nodes.pop();
+            bestMove = this.cashedPath.getNextNode();
 
-        let moveCost = this.hasFlag ? world.getTerrainCost(bestMove) + 1.5 : world.getTerrainCost(bestMove);
+        let moveCost = this.hasFlag ? world.getTerrainCost(bestMove) + this.flagMovePenalty : world.getTerrainCost(bestMove);
 
         if (moveCost > this.movesLeft)
             return MoveDirections.NO_MOVE;

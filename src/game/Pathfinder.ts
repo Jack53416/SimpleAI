@@ -8,44 +8,80 @@ export const enum ComputationType {
     ACCURATE
 }
 
-export interface Path {
-    nodes: Location[],
-    moveCost: number
+export const enum PathStatus {
+    EMPTY,
+    FINISHED,
+    IN_PROGRESS
 }
 
+
+export class Path {
+    private readonly _startnode: Location;
+    private _nodes: Location[];
+    public moveCost: number;
+    private _status: PathStatus;
+
+    constructor(nodes: Location[] = [], startNode: Location = new Location(), moveCost: number = 0) {
+        this._nodes = nodes;
+        this.moveCost = moveCost;
+        if (this._nodes.length > 0) {
+            this._status = PathStatus.IN_PROGRESS;
+        }
+        else
+            this._status = PathStatus.EMPTY;
+    }
+
+    get status(): PathStatus {
+        return this._status;
+    }
+
+    public findLocationIdx(location: Location): number {
+        return _.findIndex(this._nodes, (el) => el.equals(location));
+    }
+
+    get nodes(): Location[] {
+        return this._nodes;
+    }
+
+    public getNextNode() {
+        if (this._nodes.length == 1) {
+            this._status = PathStatus.FINISHED;
+        }
+        if (this._nodes.length == 0)
+            return this._startnode;
+        return this._nodes.pop();
+    }
+
+    public reset() {
+        this._nodes.length = 0;
+        this._status = PathStatus.EMPTY;
+    }
+
+}
 
 
 export class InvalidPath extends Error { }
 export class InvalidLocation extends Error { }
 
 function recreatePath(targetNode: Location, world: GameMap): Path {
-    let path: Path = {
-        nodes: [],
-        moveCost: 0
-    };
+    let path: Location[] = [];
+    let moveCost: number = 0;
+    
     let node = targetNode;
     while (node) {
-        path.nodes.push(node);
-        path.moveCost += world.getTerrainCost(node);
+        path.push(node);
+        moveCost += world.getTerrainCost(node);
         node = node.parent;
     }
 
-    path.moveCost -= world.getTerrainCost(path.nodes[path.nodes.length - 1]);
-    path.nodes.pop();
-    return path;
-}
-
-
-export function getNextMove(path: Path): Location {
-    return path.nodes.pop();
+    moveCost -= world.getTerrainCost(path[path.length - 1]);
+    let startnode: Location = path.pop();
+    return new Path(path, startnode, moveCost);
 }
 
 export function findPath(world: GameMap, startPositon: Location, targetPosition: Location, mode: ComputationType = ComputationType.ACCURATE): Path {
     if (startPositon.equals(targetPosition))
-        return {
-            nodes: [startPositon],
-            moveCost: 0
-        };
+        return new Path();
 
     let moveHistory = [];
     let iterNum = 0;
