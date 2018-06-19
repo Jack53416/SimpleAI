@@ -113,8 +113,11 @@ export default class Game{
         map[this.player.basePosition.y][this.player.basePosition.x] = '$';
         map[this.player.position.y][this.player.position.x] = `\x1b[36mP\x1b[0m`;
         map[this.flagPosition.y][this.flagPosition.x] = 'F';
-        if (this.enemy) {
-            map[this.enemy.position.y][this.enemy.position.x] = chalk.redBright('E');
+        if (this.enemy && this.enemy.isAlive) {
+            if (this.enemy.isInView(this.player.position))
+                map[this.enemy.position.y][this.enemy.position.x] = chalk.redBright('E');
+            else map[this.enemy.position.y][this.enemy.position.x] = chalk.red('~E~');
+
             console.log(`Enemy: ${JSON.stringify(this.enemy.getDto())}`)
         }
         console.log(table(map));
