@@ -71,6 +71,7 @@ export default class Connection {
             playerId: playerId,
             move: playerMove
         };
+        console.log(`sending move ${JSON.stringify(moveMessage)}`);
         this.socket.send(JSON.stringify(moveMessage), this.ack);
     }
 

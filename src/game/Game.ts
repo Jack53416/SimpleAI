@@ -56,6 +56,7 @@ export default class Game{
                 }
                 catch (err) {
                     console.log(chalk.redBright(`Error occured: ${err}\r\n${err.stack}`));
+                    this.connection.sendMove(this.player.id, MoveDirections.NO_MOVE);
                 }
             },
             (e) => {
