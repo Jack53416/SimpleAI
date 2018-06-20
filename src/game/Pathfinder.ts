@@ -64,6 +64,8 @@ export class Path {
 export class InvalidPath extends Error { }
 export class InvalidLocation extends Error { }
 
+const maxAccurateDist: number = 8;
+
 function recreatePath(targetNode: Location, world: GameMap): Path {
     let path: Location[] = [];
     let moveCost: number = 0;
@@ -81,16 +83,20 @@ function recreatePath(targetNode: Location, world: GameMap): Path {
 }
 
 export function findPath(world: GameMap, startPositon: Location, targetPosition: Location, mode: ComputationType = ComputationType.ACCURATE, excludeNodes: Location[] = []): Path {
-    if (startPositon.equals(targetPosition))
-        return new Path([], startPositon);
     excludeNodes.map((el) => {
         if (el.equals(targetPosition) || el.equals(startPositon))
             throw new InvalidPath(`Exludede nodes: ${JSON.stringify(excludeNodes)} 
                                     include start or end point!\r\nStart Point: ${JSON.stringify(startPositon)}\r\nEnd Pont: ${JSON.stringify(targetPosition)}`);
     });
 
+    if (startPositon.equals(targetPosition))
+        return new Path([], startPositon);
+
     let moveHistory = excludeNodes;
     let iterNum = 0;
+    if (startPositon.chebyshevDist(targetPosition) > maxAccurateDist) {
+        mode = ComputationType.GREEDY;
+    }
     startPositon.cost = 0;
 
     moveHistory.push(startPositon);

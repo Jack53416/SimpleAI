@@ -14,6 +14,7 @@ export default class Player {
     public readonly basePosition: Location;
     private readonly viewRange: number;
     private readonly flagMovePenalty: number = 1.5;
+    private readonly maxComputationRange = 6;
 
     private movesLeft: number;
     public lastFlagPosition: Location;
@@ -77,7 +78,8 @@ export default class Player {
     }
 
     public avoidEnemy(world: GameMap, target: Location, enemy: Player): pathfinder.Path {
-        let losFields: Location[] = world.getFieldsInRadius(this.position, this.viewRange);
+        let calcRadius = Math.min(this.viewRange, this.maxComputationRange);
+        let losFields: Location[] = world.getFieldsInRadius(this.position, calcRadius);
         let resultPath: pathfinder.Path;
 
         losFields = losFields.filter((el) => el.manhattanDist(enemy.position) > 1); //remove fields adjacent to the enemy
@@ -88,10 +90,7 @@ export default class Player {
 
         // sort remaining fields based on the movement cost to the target
         losFields.sort((locA, locB) => {
-            let mode = pathfinder.ComputationType.ACCURATE;
-            if (locA.manhattanDist(target) > 8 || locB.manhattanDist(target) > 8)
-                mode = pathfinder.ComputationType.GREEDY;
-            return pathfinder.findPath(world, locA, target, mode).moveCost - pathfinder.findPath(world, locB, target, mode).moveCost
+            return pathfinder.findPath(world, locA, target).moveCost - pathfinder.findPath(world, locB, target).moveCost
         });
 
         console.log(`Avoiding enemy found fields:\r\n${JSON.stringify(losFields)}`);
