@@ -17,7 +17,7 @@ export default class Player {
     private readonly maxComputationRange = 6;
 
     private movesLeft: number;
-    public lastFlagPosition: Location;
+    private lastFlagPosition: Location;
 
     public position: Location;
     public isVisible: boolean;
@@ -77,7 +77,7 @@ export default class Player {
         return path.moveCost <= movePoints;
     }
 
-    public avoidEnemy(world: GameMap, target: Location, enemy: Player): pathfinder.Path {
+    private avoidEnemy(world: GameMap, target: Location, enemy: Player): pathfinder.Path {
         let calcRadius = Math.min(this.viewRange, this.maxComputationRange);
         let losFields: Location[] = world.getFieldsInRadius(this.position, calcRadius);
         let resultPath: pathfinder.Path;
@@ -122,7 +122,7 @@ export default class Player {
         return pathToEnemy;
     }
 
-    public calculatePath(world: GameMap, target: Location, enemy: Player): pathfinder.Path {
+    private calculatePath(world: GameMap, target: Location, enemy: Player): pathfinder.Path {
         if (enemy.isVisible && enemy.isAlive) {
             return this.attackEnemy(world, target, enemy);
         }
