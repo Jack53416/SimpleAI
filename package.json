@@ -1,14 +1,13 @@
 {
   "name": "simple_ai",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Simple implementation of AI for a video game",
-  "main": "main.js",
+  "main": "bot.js",
   "scripts": {
     "build:ts": "tsc",
-    "start": "node index.js",
-    "start:watch": "nodemon index.js",
-    "start:debug": "node --inspect index.js",
-    "start:debug:ts": "node --inspect --require ts-node/register src/main.ts"
+    "start": "node dist/bot.js",
+    "start:watch": "nodemon dist/bot.js",
+    "start:debug": "node --inspect-brk dist/bot.js",
   },
   "author": "Jacek Byczkiewicz",
   "license": "ISC",
