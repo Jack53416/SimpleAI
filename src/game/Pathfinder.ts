@@ -24,6 +24,7 @@ export class Path {
     constructor(nodes: Location[] = [], startNode: Location = new Location(), moveCost: number = 0) {
         this._nodes = nodes;
         this.moveCost = moveCost;
+        this._startnode = startNode;
         if (this._nodes.length > 0) {
             this._status = PathStatus.IN_PROGRESS;
         }
@@ -81,7 +82,7 @@ function recreatePath(targetNode: Location, world: GameMap): Path {
 
 export function findPath(world: GameMap, startPositon: Location, targetPosition: Location, mode: ComputationType = ComputationType.ACCURATE): Path {
     if (startPositon.equals(targetPosition))
-        return new Path();
+        return new Path([], startPositon);
 
     let moveHistory = [];
     let iterNum = 0;
