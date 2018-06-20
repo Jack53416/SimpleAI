@@ -80,16 +80,21 @@ function recreatePath(targetNode: Location, world: GameMap): Path {
     return new Path(path, startnode, moveCost);
 }
 
-export function findPath(world: GameMap, startPositon: Location, targetPosition: Location, mode: ComputationType = ComputationType.ACCURATE): Path {
+export function findPath(world: GameMap, startPositon: Location, targetPosition: Location, mode: ComputationType = ComputationType.ACCURATE, excludeNodes: Location[] = []): Path {
     if (startPositon.equals(targetPosition))
         return new Path([], startPositon);
+    excludeNodes.map((el) => {
+        if (el.equals(targetPosition) || el.equals(startPositon))
+            throw new InvalidPath(`Exludede nodes: ${JSON.stringify(excludeNodes)} 
+                                    include start or end point!\r\nStart Point: ${JSON.stringify(startPositon)}\r\nEnd Pont: ${JSON.stringify(targetPosition)}`);
+    });
 
-    let moveHistory = [];
+    let moveHistory = excludeNodes;
     let iterNum = 0;
     startPositon.cost = 0;
 
     moveHistory.push(startPositon);
-    let possibleMoves: Location[] = startPositon.expand(world.width, world.height);
+    let possibleMoves: Location[] = startPositon.expand(world.width, world.height, moveHistory);
     // assign cost
     possibleMoves.forEach((el: Location) => el.cost += 0.7 * el.dist(targetPosition) + world.getTerrainCost(el));
 

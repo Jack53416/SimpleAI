@@ -16,7 +16,7 @@ export default class Player {
     private readonly flagMovePenalty: number = 1.5;
 
     private movesLeft: number;
-    private lastFlagPosition: Location;
+    public lastFlagPosition: Location;
 
     public position: Location;
     public isVisible: boolean;
@@ -106,18 +106,28 @@ export default class Player {
         return resultPath;
     }
 
-    private calculatePath(world: GameMap, target: Location, enemy: Player): pathfinder.Path {
+    private attackEnemy(world: GameMap, target: Location, enemy: Player): pathfinder.Path {
+        let pathToEnemy = pathfinder.findPath(world, this.position, enemy.position);
+        let canReach: boolean = this.isReachable(pathToEnemy);
+        let isFlagCaptured = this.hasFlag || enemy.hasFlag;
+
+        if (!canReach && this.lastFlagPosition.chebyshevDist(this.position) <= this.viewRange && !isFlagCaptured) { //Check if can find better path than through the flag
+            pathToEnemy = pathfinder.findPath(world, this.position, enemy.position, pathfinder.ComputationType.ACCURATE, [this.lastFlagPosition]);
+            canReach = this.isReachable(pathToEnemy);
+        }
+
+        if (!canReach)
+            return this.avoidEnemy(world, target, enemy);
+
+        this.cashedPath = pathToEnemy;
+        return pathToEnemy;
+    }
+
+    public calculatePath(world: GameMap, target: Location, enemy: Player): pathfinder.Path {
         if (enemy.isVisible && enemy.isAlive) {
-            let pathToEnemy = pathfinder.findPath(world, this.position, enemy.position);
-            if (this.isReachable(pathToEnemy)) {
-                this.cashedPath = pathToEnemy;
-                return pathToEnemy;
-            }
-            else
-                return this.avoidEnemy(world, target, enemy);
+            return this.attackEnemy(world, target, enemy);
         }
         return pathfinder.findPath(world, this.position, target, pathfinder.ComputationType.GREEDY);
-
     }
 
     public move(world: GameMap, flagPosition: Location, enemy: Player): MoveDirections {
