@@ -15,14 +15,15 @@ export default class Game{
     private enemy: Player;
     private flagPosition: Location;
     private connection: Connection;
-    private readonly url = "ws://localhost:8000";
+    private readonly url: string;
     private pId: number;
     private pName: string = 'razor1911';
     private keyMap: Map<string, MoveDirections>;
     private manualPlay: boolean;
     private debugMode: boolean;
 
-    constructor(manualPlay?: boolean) {
+    constructor(url: string = 'ws://localhost:8000', manualPlay?: boolean) {
+        this.url = url;
         this.world = null;
         this.player = null;
         this.enemy = null;
